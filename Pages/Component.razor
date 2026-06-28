@@ -1,0 +1,21 @@
+private bool procesandoPdf = false;
+
+    private async Task ManejarSubidaPdf(InputFileChangeEventArgs e)
+    {
+        var archivo = e.File;
+        if (archivo != null && archivo.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            nuevaCancion.NombrePdf = archivo.Name;
+            procesandoPdf = true;
+            StateHasChanged();
+
+            try
+            {
+                // Leemos el archivo en memoria (máximo 5MB para partituras)
+                using var stream = archivo.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5);
+                var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+
+                // Invocamos la función de JavaScript pasándole los bytes del PDF
+                string textoExtraido = await JS.InvokeAsync<Component1 />

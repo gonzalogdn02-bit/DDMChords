@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DDM Chords - Ministerio de Música</title>
+    <base href="/" />
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700;800&display=swap" />
+    <link href="css/app.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="app">
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #0f172a; color: #38bdf8; font-family: 'Segoe UI', sans-serif;">
+            <div style="text-align: center;">
+                <h2 style="margin-bottom: 10px; font-weight: 800; letter-spacing: 0.1em;">DIOS DE MAJESTAD</h2>
+                <p style="font-size: 10pt; color: #64748b; font-weight: 600;">Cargando interfaz de la banda...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui" style="display: none; background: #7f1d1d; color: #fef2f2; padding: 15px; position: fixed; bottom: 0; width: 100%; z-index: 1000; font-family: sans-serif; text-align: center;">
+        Ha ocurrido un error inesperado.
+        <a href="" class="reload" style="color: #fca5a5; font-weight: bold; margin-left: 10px;">Recargar</a>
+        <a class="dismiss" style="cursor: pointer; float: right; font-weight: bold;">✕</a>
+    </div>
+
+    <!-- LIBRERÍA DE MOZILLA PARA LEER PDFS DESDE EL NAVEGADOR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // Configuración del motor de PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // Función global que llamará Blazor para leer el archivo subido
+        window.extraerTextoDePdf = async (bytesArchivo) => {
+            try {
+                // Convertimos los bytes que manda Blazor en un formato legible para la librería
+                const datos = new Uint8Array(bytesArchivo);
+                const pdf = await pdfjsLib.getDocument({ data: datos }).promise;
+                let textoCompleto = "";
+
+                // Recorremos todas las páginas del PDF extrayendo el texto texto plano
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const pagina = await pdf.getPage(i);
+                    const contenidoTexto = await pagina.getTextContent();
+
+                    // Unimos las palabras respetando los saltos de línea básicos
+                    let lineaAnteriorY = null;
+                    for (const item of contenidoTexto.items) {
+                        if (lineaAnteriorY !== null && item.transform[5] !== lineaAnteriorY) {
+                            textoCompleto += "\n";
+                        }
+                        textoCompleto += item.str + " ";
+                        lineaAnteriorY = item.transform[5];
+                    }
+                }
+
+                // Reemplazamos los saltos de línea comunes por etiquetas <br> de HTML para que Blazor las dibuje bien
+                return textoCompleto.replace(/\n/g, "<br>");
+            } catch (error) {
+                console.error("Error al leer el PDF:", error);
+                return "Error al procesar el archivo PDF. Asegúrate de que sea un PDF con texto seleccionable.";
+            }
+        };
+    </script>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+
+</html>
