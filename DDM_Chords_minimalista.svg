@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" role="img" aria-labelledby="title desc">
+  <title id="title">DDM Chords — Minimal Logo</title>
+  <desc id="desc">Logo minimalista de DDM Chords con un diapasón estilizado y detalles en azul eléctrico.</desc>
+
+  <defs>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16A4FF"/>
+      <stop offset="100%" stop-color="#0067E8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Minimal chord icon -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Broken circular arc -->
+    <path d="M90 235 A155 155 0 0 1 375 120" stroke="url(#blue)" stroke-width="18"/>
+    <path d="M375 350 A155 155 0 0 1 90 235" stroke="url(#blue)" stroke-width="18"/>
+
+    <!-- Nut -->
+    <rect x="175" y="150" width="150" height="18" rx="9" fill="#FFFFFF" stroke="none"/>
+
+    <!-- Strings -->
+    <g stroke="#FFFFFF" stroke-width="6">
+      <line x1="195" y1="175" x2="195" y2="375"/>
+      <line x1="225" y1="175" x2="225" y2="375"/>
+      <line x1="255" y1="175" x2="255" y2="375"/>
+      <line x1="285" y1="175" x2="285" y2="375"/>
+      <line x1="315" y1="175" x2="315" y2="375"/>
+    </g>
+
+    <!-- Frets -->
+    <g stroke="#FFFFFF" stroke-width="6">
+      <line x1="178" y1="225" x2="332" y2="225"/>
+      <line x1="178" y1="280" x2="332" y2="280"/>
+      <line x1="178" y1="335" x2="332" y2="335"/>
+    </g>
+
+    <!-- Chord dots -->
+    <g fill="url(#blue)" stroke="none">
+      <circle cx="225" cy="225" r="18"/>
+      <circle cx="285" cy="280" r="18"/>
+      <circle cx="255" cy="335" r="18"/>
+    </g>
+  </g>
+
+  <!-- DDM -->
+  <g font-family="Arial, Helvetica, sans-serif" font-size="170" font-weight="700">
+    <text x="450" y="270" fill="#FFFFFF">DD</text>
+    <text x="735" y="270" fill="url(#blue)">M</text>
+  </g>
+
+  <!-- CHORDS -->
+  <text x="755" y="350"
+        text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="48"
+        font-weight="500"
+        letter-spacing="17"
+        fill="#FFFFFF">CHORDS</text>
+
+  <!-- Accent lines -->
+  <g stroke="url(#blue)" stroke-width="7" stroke-linecap="round">
+    <line x1="455" y1="337" x2="515" y2="337"/>
+    <line x1="965" y1="337" x2="1025" y2="337"/>
+  </g>
+</svg>
