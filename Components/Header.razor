@@ -1,0 +1,26 @@
+﻿<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 glass-panel p-3">
+    <h2 class="fw-bold m-0 fs-3">
+        @(VistaActual == "canciones" ? "Repertorio General" : VistaActual == "setlists" ? "Mis Setlists" : "Nueva Canción")
+    </h2>
+    <div class="d-flex align-items-center gap-2 flex-wrap w-100 w-sm-auto justify-content-end">
+        <div class="input-group input-group-sm" style="max-width: 210px;">
+            <span class="input-group-text bg-dark text-white border-secondary">👤 Rol</span>
+            <select class="form-select bg-dark text-white border-secondary" value="@RolActual" @onchange="CambiarRolInternal">
+                <option value="Guitarra Eléctrica">Guitarra Eléctrica</option>
+                <option value="Voz Principal">Voz Principal</option>
+                <option value="Teclado">Teclado</option>
+                <option value="Batería">Batería</option>
+                <option value="Bajo">Bajo</option>
+            </select>
+        </div>
+        <button class="clay-btn clay-dark py-1 px-3 fs-7" @onclick="OnImprimir">🖨️ Imprimir</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string VistaActual { get; set; } = "canciones";
+    [Parameter] public string RolActual { get; set; } = "Guitarra Eléctrica";
+    [Parameter] public EventCallback<string> OnRolCambiado { get; set; }
+    [Parameter] public EventCallback OnImprimir { get; set; }
+    private async Task CambiarRolInternal(ChangeEventArgs e) => await OnRolCambiado.InvokeAsync(e.Value?.ToString());
+}

@@ -1,0 +1,140 @@
+﻿@using DDMChords.Models
+@using DDMChords.Extensions
+
+@if (Cancion != null)
+{
+    <div class="glass-panel p-0 overflow-hidden mb-4">
+        <div class="p-3 border-bottom border-secondary d-flex flex-wrap justify-content-between align-items-center gap-3 bg-opacity-25 bg-dark">
+            <div>
+                <h3 class="m-0 fw-bold text-info d-flex align-items-center gap-2 fs-4">
+                    @Cancion.Titulo
+                    <button class="btn btn-sm text-warning p-0 fs-6 ms-2" @onclick="() => OnEditarCancion.InvokeAsync(Cancion)">✏️ Editar</button>
+                </h3>
+                <p class="m-0 text-white-50 small">@Cancion.Autor</p>
+            </div>
+            
+            <div class="d-flex flex-wrap gap-2 align-items-center bg-dark p-2 rounded border border-secondary">
+                <div class="d-flex align-items-center gap-1 border-end border-secondary pe-2 me-1">
+                    <button class="btn btn-sm btn-outline-secondary text-white py-0 px-2 fw-bold" @onclick="BajarTono">b</button>
+                    <span class="fw-bold fs-5 text-primary mx-1" style="min-width: 32px; text-align: center;">@Cancion.Tonalidad</span>
+                    <button class="btn btn-sm btn-outline-secondary text-white py-0 px-2 fw-bold" @onclick="SubirTono">#</button>
+                    <button class="btn btn-sm btn-outline-info py-0 px-1 ms-1 fs-7" @onclick="ConmutarModo">M/m</button>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <button class="btn btn-sm btn-outline-secondary text-white py-0 px-2 fw-bold" @onclick="RestarBpm">-</button>
+                    
+                    <span class="fw-bold text-white mx-1" style="min-width: 30px; text-align: center;">@Cancion.ObtenerBpmString()</span>
+                    
+                    <button class="btn btn-sm btn-outline-secondary text-white py-0 px-2 fw-bold" @onclick="SumarBpm">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3">
+            <div class="chords-text bg-dark bg-opacity-50 p-3 rounded border border-secondary mb-3">
+D          A
+No tengo nada para ofrecer
+
+Bm
+Solo un corazón quebrantado
+            </div>
+            
+            <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                <button class="clay-btn clay-green py-1 px-3 fs-7" @onclick="AgregarPdf">📄 + Agregar PDF</button>
+                @if (HasPdf)
+                {
+                    <span class="badge bg-danger p-2 fs-7">📄 PDF: @PdfNombre</span>
+                }
+            </div>
+
+            <div class="d-flex flex-column align-items-end mt-4 w-100">
+                <h6 class="text-info small mb-2 border-bottom border-info pb-1 text-end w-100">Indicaciones de la Banda</h6>
+                <div class="glass-panel p-2 px-3 mb-2 text-end border-warning w-100" style="max-width: 500px; border-right: 4px solid #ffc107;">
+                    <span class="badge bg-warning text-dark mb-1">@RolActual</span>
+                    <p class="m-0 small text-white">Prestar atención a los cortes de @RolActual en el puente.</p>
+                </div>
+
+                <div class="glass-panel p-2 px-3 mb-3 text-end border-info w-100" style="max-width: 500px; border-right: 4px solid #3b82f6;">
+                    <p class="m-0 text-white-50 fst-italic small">
+                        @(string.IsNullOrWhiteSpace(Cancion.NotaMusico) ? "Sin indicaciones..." : Cancion.NotaMusico)
+                    </p>
+                </div>
+
+                @if (IsEditingNota)
+                {
+                    <div class="input-group input-group-sm mt-1" style="max-width: 320px;">
+                        <input type="text" class="form-control bg-dark text-white border-secondary text-end" @bind="notaTextoTemp" />
+                        <button class="clay-btn clay-green rounded-0 rounded-end py-1 px-3" @onclick="GuardarNotaInternal">✔</button>
+                        <button class="btn btn-sm btn-secondary" @onclick="() => IsEditingNota = false">❌</button>
+                    </div>
+                }
+                else
+                {
+                    <button class="clay-btn clay-blue btn-sm rounded-circle shadow-lg" style="width: 46px; height: 46px; font-size: 1.5rem; padding: 0;" @onclick="HabilitarEdicionNota">+</button>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public CancionModel? Cancion { get; set; }
+    [Parameter] public string RolActual { get; set; } = "Guitarra Eléctrica";
+    [Parameter] public EventCallback<CancionModel> OnEditarCancion { get; set; }
+
+    private bool IsEditingNota = false;
+    private string notaTextoTemp = string.Empty;
+    private bool HasPdf = false;
+    private string PdfNombre = string.Empty;
+
+    private readonly string[] notasMusicales = { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B" };
+
+    private void HabilitarEdicionNota()
+    {
+        if (Cancion == null) return;
+        notaTextoTemp = Cancion.NotaMusico ?? string.Empty;
+        IsEditingNota = true;
+    }
+
+    private void GuardarNotaInternal()
+    {
+        if (Cancion != null) Cancion.NotaMusico = notaTextoTemp;
+        IsEditingNota = false;
+    }
+
+    private void AgregarPdf()
+    {
+        if (Cancion == null) return;
+        string t = string.IsNullOrWhiteSpace(Cancion.Titulo) ? "Cancion" : Cancion.Titulo.Replace(" ", "_");
+        PdfNombre = $"{t}_Acordes.pdf";
+        HasPdf = true;
+    }
+
+    private void SumarBpm() => Cancion.ModificarBpmSeguro(1);
+    private void RestarBpm() => Cancion.ModificarBpmSeguro(-1);
+
+    private void SubirTono()
+    {
+        if (Cancion == null || string.IsNullOrEmpty(Cancion.Tonalidad)) return;
+        string baseNota = Cancion.Tonalidad.Replace("m", "");
+        string modo = Cancion.Tonalidad.Contains("m") ? "m" : "";
+        int index = Array.IndexOf(notasMusicales, baseNota);
+        if (index >= 0) Cancion.Tonalidad = notasMusicales[(index + 1) % notasMusicales.Length] + modo;
+    }
+
+    private void BajarTono()
+    {
+        if (Cancion == null || string.IsNullOrEmpty(Cancion.Tonalidad)) return;
+        string baseNota = Cancion.Tonalidad.Replace("m", "");
+        string modo = Cancion.Tonalidad.Contains("m") ? "m" : "";
+        int index = Array.IndexOf(notasMusicales, baseNota);
+        if (index >= 0) Cancion.Tonalidad = notasMusicales[(index - 1 + notasMusicales.Length) % notasMusicales.Length] + modo;
+    }
+
+    private void ConmutarModo()
+    {
+        if (Cancion == null || string.IsNullOrEmpty(Cancion.Tonalidad)) return;
+        if (Cancion.Tonalidad.Contains("m")) Cancion.Tonalidad = Cancion.Tonalidad.Replace("m", "");
+        else Cancion.Tonalidad += "m";
+    }
+}

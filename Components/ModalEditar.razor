@@ -1,0 +1,32 @@
+﻿@using DDMChords.Models
+
+<div class="glass-modal">
+    <div class="glass-panel p-4 w-100" style="max-width: 600px; background: rgba(30, 41, 59, 0.95);">
+        <h4 class="text-info fw-bold mb-3">Modificar Propiedades del Tema</h4>
+        <div class="row g-3">
+            <div class="col-sm-6"><label class="form-label small text-white-50">Título</label><input type="text" class="form-control bg-dark text-white border-secondary" @bind="EditTitulo" /></div>
+            <div class="col-sm-6"><label class="form-label small text-white-50">Autor / Artista</label><input type="text" class="form-control bg-dark text-white border-secondary" @bind="EditAutor" /></div>
+            <div class="col-6"><label class="form-label small text-white-50">Tonalidad</label><input type="text" class="form-control bg-dark text-white border-secondary" @bind="EditTonalidad" /></div>
+            <div class="col-6"><label class="form-label small text-white-50">BPM</label><input type="text" class="form-control bg-dark text-white border-secondary" @bind="EditBpmStr" /></div>
+            <div class="col-12 text-end gap-2 d-flex justify-content-end mt-4">
+                <button class="clay-btn clay-dark py-1 px-3" @onclick="OnCancelar">Cerrar</button>
+                <button class="clay-btn clay-blue py-1 px-3" @onclick="GuardarCambios">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public CancionModel? Cancion { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+    [Parameter] public EventCallback OnGuardado { get; set; }
+    private string EditTitulo = string.Empty; private string EditAutor = string.Empty; private string EditTonalidad = string.Empty; private string EditBpmStr = "80";
+
+    protected override void OnParametersSet() {
+        if (Cancion != null) { EditTitulo = Cancion.Titulo ?? ""; EditAutor = Cancion.Autor ?? ""; EditTonalidad = Cancion.Tonalidad ?? ""; EditBpmStr = Cancion.Bpm.ToString() ?? "80"; }
+    }
+    private async Task GuardarCambios() {
+        if (Cancion != null) { Cancion.Titulo = EditTitulo; Cancion.Autor = EditAutor; Cancion.Tonalidad = EditTonalidad; if (int.TryParse(EditBpmStr, out int parsedBpm)) Cancion.Bpm = parsedBpm; }
+        await OnGuardado.InvokeAsync();
+    }
+}

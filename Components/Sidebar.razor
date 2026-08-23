@@ -1,0 +1,17 @@
+﻿<div class="sidebar glass-panel p-3 d-flex flex-md-column align-items-center align-items-md-stretch justify-content-between justify-content-md-start gap-2">
+    <div class="text-center mb-0 mb-md-4">
+        <h3 class="fw-bold text-info m-0">DDMChords</h3>
+        <p class="text-muted small d-none d-md-block m-0">Plataforma de Ensayo</p>
+    </div>
+    <div class="nav flex-row flex-md-column nav-pills gap-2 overflow-auto w-100 justify-content-center justify-content-md-start">
+        <button class="clay-btn @(VistaActual == "canciones" ? "clay-blue" : "clay-dark") flex-grow-1 flex-md-grow-0" @onclick='() => SeleccionarVista("canciones")'>🎵 Canciones</button>
+        <button class="clay-btn @(VistaActual == "setlists" ? "clay-blue" : "clay-dark") flex-grow-1 flex-md-grow-0" @onclick='() => SeleccionarVista("setlists")'>📋 Setlists</button>
+        <button class="clay-btn @(VistaActual == "agregar" ? "clay-blue" : "clay-dark") flex-grow-1 flex-md-grow-0" @onclick='() => SeleccionarVista("agregar")'>➕ Nuevo</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string VistaActual { get; set; } = "canciones";
+    [Parameter] public EventCallback<string> OnVistaCambiada { get; set; }
+    private async Task SeleccionarVista(string nuevaVista) => await OnVistaCambiada.InvokeAsync(nuevaVista);
+}

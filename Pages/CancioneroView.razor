@@ -1,4 +1,228 @@
-﻿private bool procesandoPdf = false;
+﻿@page "/cancionero"
+@using DDMChords.Models
+@using System.IO
+@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JS
+
+<div class="d-flex h-100">
+    <!-- BARRA LATERAL -->
+    <div class="sidebar d-flex flex-column align-items-center py-3 bg-dark text-white" style="width: 70px;">
+        <h5 class="text-info fw-bold mb-4">DDM</h5>
+        <button class="btn btn-sm @(seccionActual == "CAN" ? "btn-primary" : "btn-outline-secondary") mb-3 rounded-circle" @onclick='() => seccionActual = "CAN"'>CAN</button>
+        <button class="btn btn-sm @(seccionActual == "SET" ? "btn-primary" : "btn-outline-secondary") mb-3 rounded-circle" @onclick='() => seccionActual = "SET"'>SET</button>
+        <button class="btn btn-sm @(seccionActual == "NUE" ? "btn-primary" : "btn-outline-secondary") mb-3 rounded-circle" @onclick='() => seccionActual = "NUE"'>NUE</button>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="flex-grow-1 p-4 overflow-auto">
+        <!-- HEADER: ROL E IMPRIMIR -->
+        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-secondary rounded">
+            <div class="d-flex align-items-center gap-2">
+                <label class="text-light fw-bold">Rol:</label>
+                <select class="form-select form-select-sm bg-dark text-white border-0" @bind="rolSeleccionado">
+                    <option value="Guitarra Eléctrica">Guitarra Eléctrica</option>
+                    <option value="Guitarra Acústica">Guitarra Acústica</option>
+                    <option value="Bajo">Bajo</option>
+                    <option value="Teclado">Teclado</option>
+                    <option value="Batería">Batería</option>
+                    <option value="Voz">Voz</option>
+                </select>
+            </div>
+            <button class="btn btn-sm btn-outline-light" @onclick="Imprimir">IMP</button>
+        </div>
+
+        @if (seccionActual == "CAN")
+        {
+            <!-- LISTA DE CANCIONES -->
+            @foreach (var cancion in canciones)
+            {
+                <div class="card bg-dark text-white mb-4 border-secondary p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <!-- SELECTOR RÁPIDO DE TONO Y BPM -->
+                        <div class="d-flex gap-2">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    🎵 Tono: @cancion.Tonalidad
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark">
+                                    @foreach (var tono in escalas)
+                                    {
+                                        <li><a class="dropdown-item" href="javascript:void(0)" @onclick="() => cancion.Tonalidad = tono">@tono</a></li>
+                                    }
+                                </ul>
+                            </div>
+                            <div class="input-group input-group-sm" style="width: 120px;">
+                                <button class="btn btn-outline-secondary" @onclick="() => cancion.Bpm--">-</button>
+                                <span class="input-group-text bg-dark text-white border-secondary">@cancion.Bpm</span>
+                                <button class="btn btn-outline-secondary" @onclick="() => cancion.Bpm++">+</button>
+                            </div>
+                        </div>
+
+                        <!-- INDICACIÓN SEGÚN ROL -->
+                        <div class="badge bg-warning text-dark p-2">
+                            @rolSeleccionado
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h4 class="text-info fw-bold mb-0">@cancion.Titulo</h4>
+                            <small class="text-muted">@cancion.Autor</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-warning" @onclick="() => EditarCancion(cancion)">✏️ Editar</button>
+                            <button class="btn btn-sm btn-outline-success" @onclick="() => AgregarAlSetlist(cancion)">+ Setlist</button>
+                        </div>
+                    </div>
+
+                    <!-- LETRA Y ACORDES -->
+                    <div class="mt-3 p-3 bg-black rounded" style="font-family: monospace; white-space: pre-wrap;">
+                        @cancion.LetraConAcordes
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(cancion.NombrePdf))
+                    {
+                        <div class="mt-2">
+                            <span class="badge bg-danger">📎 @cancion.NombrePdf</span>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else if (seccionActual == "SET")
+        {
+            <!-- VISTA DE SETLIST -->
+            <div class="card bg-dark text-white p-4 border-secondary">
+                <h4 class="text-info">Setlist de Ensayo</h4>
+                @if (setlistActual.Count == 0)
+                {
+                    <p class="text-muted">No hay canciones agregadas al setlist aún.</p>
+                }
+                else
+                {
+                    <ol class="list-group list-group-numbered list-group-flush">
+                        @foreach (var tema in setlistActual)
+                        {
+                            <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@tema.Titulo</strong> - @tema.Autor (@tema.Tonalidad | @tema.Bpm BPM)
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => setlistActual.Remove(tema)">Quitar</button>
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+        }
+        else if (seccionActual == "NUE")
+        {
+            <!-- FORMULARIO NUEVA CANCIÓN -->
+            <div class="card bg-dark text-white p-4 border-secondary" style="max-width: 600px; margin: auto;">
+                <h4 class="text-info mb-3">@(modoEdicion ? "Editar Canción" : "Agregar Nueva Canción")</h4>
+                <div class="mb-3">
+                    <label class="form-label">Título</label>
+                    <input class="form-control bg-secondary text-white border-0" @bind="nuevaCancion.Titulo" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Autor / Artista</label>
+                    <input class="form-control bg-secondary text-white border-0" @bind="nuevaCancion.Autor" />
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label class="form-label">Tono</label>
+                        <select class="form-select bg-secondary text-white border-0" @bind="nuevaCancion.Tonalidad">
+                            @foreach (var tono in escalas)
+                            {
+                                <option value="@tono">@tono</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label class="form-label">BPM</label>
+                        <input type="number" class="form-control bg-secondary text-white border-0" @bind="nuevaCancion.Bpm" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Letra con Acordes</label>
+                    <textarea rows="6" class="form-control bg-secondary text-white border-0" style="font-family: monospace;" @bind="nuevaCancion.LetraConAcordes"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Cargar PDF</label>
+                    <InputFile OnChange="ManejarSubidaPdf" class="form-control bg-secondary text-white border-0" />
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-info flex-grow-1" @onclick="GuardarCancion">Guardar Tema</button>
+                    @if (modoEdicion)
+                    {
+                        <button class="btn btn-outline-secondary" @onclick="CancelarEdicion">Cancelar</button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string seccionActual = "CAN";
+    private string rolSeleccionado = "Guitarra Eléctrica";
+    private bool modoEdicion = false;
+    private bool procesandoPdf = false;
+
+    private List<string> escalas = new() { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "Cm", "Dm", "Em", "Fm", "Gm", "Am", "Bm" };
+
+    private List<CancionModel> canciones = new()
+    {
+        new CancionModel
+        {
+            Id = 1,
+            Titulo = "Digno",
+            Autor = "Marcos Brunet",
+            Tonalidad = "D",
+            Bpm = 81,
+            LetraConAcordes = "D               A\nNo tengo nada para ofrecer\nBm              G\nSolo un corazón quebrantado",
+            NombrePdf = "Digno_Acordes.pdf"
+        }
+    };
+
+    // Usamos una lista simple para el setlist temporal
+    private List<CancionModel> setlistActual = new();
+
+    private CancionModel nuevaCancion = new();
+
+    private void AgregarAlSetlist(CancionModel cancion)
+    {
+        if (!setlistActual.Any(c => c.Id == cancion.Id))
+        {
+            setlistActual.Add(cancion);
+        }
+    }
+
+    private void EditarCancion(CancionModel cancion)
+    {
+        nuevaCancion = cancion;
+        modoEdicion = true;
+        seccionActual = "NUE";
+    }
+
+    private void CancelarEdicion()
+    {
+        nuevaCancion = new CancionModel();
+        modoEdicion = false;
+        seccionActual = "CAN";
+    }
+
+    private void GuardarCancion()
+    {
+        if (!modoEdicion)
+        {
+            // Asignar un ID temporal para que no repita el 0
+            nuevaCancion.Id = canciones.Any() ? canciones.Max(c => c.Id) + 1 : 1;
+            canciones.Add(nuevaCancion);
+        }
+        nuevaCancion = new CancionModel();
+        modoEdicion = false;
+        seccionActual = "CAN";
+    }
 
     private async Task ManejarSubidaPdf(InputFileChangeEventArgs e)
     {
@@ -7,15 +231,27 @@
         {
             nuevaCancion.NombrePdf = archivo.Name;
             procesandoPdf = true;
-            StateHasChanged();
 
             try
             {
-                // Leemos el archivo en memoria (máximo 5MB para partituras)
                 using var stream = archivo.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5);
-                var ms = new MemoryStream();
+                using var ms = new MemoryStream();
                 await stream.CopyToAsync(ms);
                 var bytes = ms.ToArray();
+            }
+            catch (Exception)
+            {
+                // Manejo de error silencioso
+            }
+            finally
+            {
+                procesandoPdf = false;
+            }
+        }
+    }
 
-                // Invocamos la función de JavaScript pasándole los bytes del PDF
-                string textoExtraido = await JS.InvokeAsync<Component />
+    private void Imprimir()
+    {
+        JS.InvokeVoidAsync("window.print");
+    }
+}

@@ -1,1 +1,1069 @@
-﻿
+﻿@page "/"
+@using DDMChords.Models
+@using System.IO
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JS
+
+<PageTitle>DDMChords - Plataforma de Ensayo</PageTitle>
+
+<style>
+    :root {
+        --bg-color: #0b1120;
+        --glass-bg: rgba(30, 41, 59, 0.6);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --glass-hover: rgba(255, 255, 255, 0.15);
+        --purple-accent: #a855f7;
+        --cyan-accent: #06b6d4;
+        --danger-accent: #ef4444;
+        --warning-accent: #f59e0b;
+        --success-accent: #10b981;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: #f8fafc;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .app-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    @@media (min-width: 768px) {
+        .app-layout {
+            flex-direction: row;
+        }
+
+        .sidebar-nav {
+            width: 230px;
+            min-height: 100vh;
+            border-right: 1px solid var(--glass-border);
+            border-bottom: none !important;
+        }
+    }
+
+    .glass-panel {
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+    }
+
+    /* ESTILO PEDALERA / RACK DAW */
+    .liquid-nav-container {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        gap: 12px;
+        padding: 4px;
+        width: 100%;
+    }
+
+    @@media (min-width: 768px) {
+        .liquid-nav-container {
+            flex-direction: column;
+            gap: 14px;
+        }
+    }
+
+    .btn-liquid {
+        position: relative;
+        width: 100%;
+        min-height: 44px;
+        padding: 0 16px 0 38px; /* Espacio a la izquierda para el LED */
+        border-radius: 8px;
+        border: 1px solid #334155;
+        outline: none;
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        color: #94a3b8;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 9pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+        .btn-liquid:hover {
+            color: #e2e8f0;
+            border-color: #475569;
+            background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+        }
+
+        /* EL LED APAGADO (Punto gris) */
+        .btn-liquid::before {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #334155;
+            border: 1px solid #0f172a;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+        }
+
+        /* ESTADO ACTIVO: Botón hundido y texto iluminado */
+        .btn-liquid.active {
+            background: #0b1120;
+            color: var(--cyan-accent);
+            border-color: #1e293b;
+            box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.7);
+        }
+
+            /* EL LED ENCENDIDO: Luz Cian Neón */
+            .btn-liquid.active::before {
+                background-color: var(--cyan-accent);
+                border-color: #ffffff;
+                box-shadow: 0 0 8px var(--cyan-accent), 0 0 14px var(--cyan-accent), inset 0 0 2px #ffffff;
+            }
+
+    .btn-action-liquid {
+        padding: 6px 18px;
+        border-radius: 20px;
+        border: none;
+        outline: none;
+        color: #fff;
+        font-size: 8.5pt;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+        .btn-action-liquid:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+    .btn-action-danger {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: #fca5a5;
+    }
+
+    .btn-action-warning {
+        background: rgba(245, 158, 11, 0.2);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        color: #fcd34d;
+    }
+
+    .btn-action-success {
+        background: rgba(16, 185, 129, 0.2);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        color: #6ee7b7;
+    }
+
+    .btn-action-info {
+        background: rgba(6, 182, 212, 0.2);
+        border: 1px solid rgba(6, 182, 212, 0.4);
+        color: #67e8f9;
+    }
+
+    .btn-action-secondary {
+        background: rgba(100, 116, 139, 0.2);
+        border: 1px solid rgba(100, 116, 139, 0.4);
+        color: #cbd5e1;
+    }
+
+    .btn-oval-glass {
+        padding: 4px 14px;
+        height: 32px;
+        border-radius: 16px;
+        background: rgba(59, 130, 246, 0.2);
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        color: #e2e8f0;
+        font-size: 8.5pt;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .popover-tonalidades {
+        position: absolute;
+        top: 125%;
+        left: 0;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 8px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        z-index: 2000;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+        min-width: 220px;
+    }
+
+    .popover-bpm {
+        position: absolute;
+        top: 125%;
+        left: 0;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 8px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        z-index: 2000;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+        min-width: 240px;
+        max-height: 240px;
+        overflow-y: auto;
+    }
+
+    .bpm-input-custom {
+        width: 44px;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #fff;
+        font-weight: 700;
+        font-size: 9pt;
+        text-align: center;
+    }
+
+        .bpm-input-custom::-webkit-inner-spin-button,
+        .bpm-input-custom::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+    .btn-tonalidad-item {
+        padding: 6px 0;
+        font-size: 8.5pt;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+        text-align: center;
+    }
+
+        .btn-tonalidad-item:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+    .chords-display {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 15px;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 16px;
+        color: #38bdf8;
+        text-align: center;
+    }
+
+    .role-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(5, 10, 20, 0.88);
+        backdrop-filter: blur(12px);
+        z-index: 3000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .role-card {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+        .role-card:hover {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: var(--cyan-accent);
+            transform: translateY(-2px);
+        }
+
+    .pdf-viewer {
+        width: 100%;
+        height: 600px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background-color: #2a2a2a;
+    }
+
+    /* ESTILOS EXCLUSIVOS DE IMPRESIÓN / PDF */
+    #print-container {
+        display: none;
+    }
+
+    @@media print {
+        @@page {
+            margin: 0;
+            size: auto;
+        }
+
+        html, body {
+            background-color: #0b1120 !important;
+            color: #f8fafc !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100%;
+            height: 100%;
+        }
+
+        .app-layout, .role-modal-backdrop, svg {
+            display: none !important;
+        }
+
+        #print-container {
+            display: block !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            min-height: 100vh;
+            padding: 20mm;
+            margin: 0;
+            box-sizing: border-box;
+            background-color: #0b1120 !important;
+            color: #f8fafc !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .print-page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+    }
+</style>
+
+@if (!rolSeleccionadoInicial)
+{
+    <div class="role-modal-backdrop">
+        <div class="glass-panel p-4 p-md-5" style="max-width: 650px; width: 100%;">
+            <div class="text-center mb-4">
+                <div class="d-flex justify-content-center mb-3">
+                    <img src="logo.svg" alt="DDMChords Logo" style="width: 100%; max-width: 180px; height: auto; filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.5));" />
+                </div>
+                <h2 class="fw-bold" style="color: var(--cyan-accent);">Bienvenido a DDMChords</h2>
+                <p class="text-white-50 small">Selecciona tu instrumento/rol para configurar tu vista de ensayo:</p>
+            </div>
+            <div class="row g-3">
+                @foreach (var rol in listaRoles)
+                {
+                    <div class="col-6 col-md-4">
+                        <div class="role-card" @onclick="() => ElegirRolInicial(rol)">
+                            <span class="fw-bold text-light">@rol</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarModalEliminar)
+{
+    <div class="role-modal-backdrop">
+        <div class="glass-panel p-4" style="max-width: 600px; width: 100%; max-height: 85vh; display: flex; flex-direction: column;">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                <h5 class="fw-bold text-danger m-0">Eliminar Canciones del Repertorio</h5>
+                <button class="btn btn-sm btn-outline-secondary rounded-circle" @onclick="() => mostrarModalEliminar = false">✕</button>
+            </div>
+
+            <p class="text-white-50 small mb-3">Haz clic en <strong>Eliminar</strong> en la canción que quieras borrar permanentemente:</p>
+
+            <div class="overflow-auto flex-grow-1 pe-1">
+                @if (listaDeCanciones.Count == 0)
+                {
+                    <p class="text-muted text-center py-4">No hay canciones cargadas.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush bg-transparent">
+                        @foreach (var cancion in listaDeCanciones)
+                        {
+                            var c = cancion;
+                            <li class="list-group-item bg-dark bg-opacity-50 text-white border-secondary mb-2 rounded d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold text-info">@c.Titulo</div>
+                                    <small class="text-white-50">@c.Autor &bull; Tono: @c.Tonalidad &bull; @c.Bpm BPM</small>
+                                </div>
+                                <button class="btn-action-liquid btn-action-danger" @onclick="() => EliminarCancion(c)">
+                                    Eliminar
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+
+            <div class="mt-3 pt-2 text-end border-top border-secondary border-opacity-25">
+                <button class="btn-action-liquid btn-action-secondary" @onclick="() => mostrarModalEliminar = false">Cerrar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarModalImpresion)
+{
+    <div class="role-modal-backdrop">
+        <div class="glass-panel p-4" style="max-width: 500px; width: 100%;">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                <h5 class="fw-bold text-info m-0">Personalizar Descarga / PDF</h5>
+                <button class="btn btn-sm btn-outline-secondary rounded-circle" @onclick="() => mostrarModalImpresion = false">✕</button>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-6">
+                    <label class="form-label small text-white-50">Color de Acordes</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" class="form-control form-control-color bg-dark border-secondary" @bind="printColorAcordes" style="width: 48px; height: 38px; cursor: pointer;" />
+                        <span class="small font-monospace text-white">@printColorAcordes</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label small text-white-50">Color de Letra</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" class="form-control form-control-color bg-dark border-secondary" @bind="printColorLetra" style="width: 48px; height: 38px; cursor: pointer;" />
+                        <span class="small font-monospace text-white">@printColorLetra</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3 mb-4 rounded border text-center font-monospace" style="background-color: #0f172a; border-color: rgba(255,255,255,0.1) !important; font-size: 13px;">
+                <div style="color: @printColorAcordes; font-weight: 700;">G &nbsp; &nbsp; B7 &nbsp; &nbsp; Em</div>
+                <div style="color: @printColorLetra;">Flaca, no me claves tus puñales</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn-action-liquid btn-action-info flex-grow-1 py-2" @onclick="EjecutarDescargaPdf">Descargar PDF / Imprimir</button>
+                <button class="btn-action-liquid btn-action-secondary" @onclick="() => mostrarModalImpresion = false">Cancelar</button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="app-layout">
+    <div class="sidebar-nav glass-panel p-3 d-flex flex-md-column align-items-center justify-content-between justify-content-md-start gap-4">
+        <div class="text-center w-100 py-3 px-2">
+            <img src="logo.svg" alt="DDMChords Logo" style="width: 100%; max-width: 150px; height: auto; filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.45));" />
+        </div>
+        <div class="liquid-nav-container">
+            <button class="btn-liquid @(vistaActual == "canciones" ? "active" : "")" @onclick='() => vistaActual = "canciones"'>Canciones</button>
+            <button class="btn-liquid @(vistaActual == "setlists" ? "active" : "")" @onclick='() => vistaActual = "setlists"'>Setlists</button>
+            <button class="btn-liquid @(vistaActual == "agregar" ? "active" : "")" @onclick='IrANuevoTema'>Nuevo Tema</button>
+        </div>
+    </div>
+
+    <div class="flex-grow-1 p-3 p-md-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 glass-panel p-3 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-white-50 small">Rol Activo:</span>
+                <span class="badge bg-dark border border-secondary text-info px-3 py-2 fs-6 rounded-pill">
+                    @rolActual
+                </span>
+                <button class="btn-action-liquid btn-action-danger ms-2" title="Cerrar sesión de rol" @onclick="CerrarSesionRol">
+                    Salir Rol
+                </button>
+            </div>
+            <button class="btn-action-liquid btn-action-info" title="Imprimir" @onclick="AbrirConfigImpresion">Imprimir</button>
+        </div>
+
+        @if (vistaActual == "canciones")
+        {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold text-info m-0">Repertorio de Canciones</h4>
+                @if (listaDeCanciones.Count > 0)
+                {
+                    <button class="btn-action-liquid btn-action-danger" @onclick="() => mostrarModalEliminar = true">
+                        Administrar / Eliminar
+                    </button>
+                }
+            </div>
+
+            @if (listaDeCanciones.Count == 0)
+            {
+                <div class="glass-panel p-5 text-center">
+                    <h4 class="text-info fw-bold">Repertorio Vacío</h4>
+                    <p class="text-white-50 mb-3">No hay canciones registradas aún.</p>
+                    <button class="btn-action-liquid btn-action-info" @onclick="IrANuevoTema">Agregar Primera Canción</button>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var cancion in listaDeCanciones)
+                    {
+                        var cancionActual = cancion;
+                        <div class="col-12">
+                            <div class="glass-panel p-4">
+                                <div class="d-flex justify-content-between align-items-start pb-3 mb-3 border-bottom border-secondary border-opacity-25 flex-wrap gap-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="position: relative;">
+                                            <button class="btn-oval-glass" @onclick="() => AlternarBurbuja(cancionActual.Id, true)">
+                                                Tono: @cancionActual.Tonalidad
+                                            </button>
+                                            @if (cancionIdBurbujaAbierta == cancionActual.Id && tipoBurbuja == "Tono")
+                                            {
+                                                <div class="popover-tonalidades">
+                                                    @foreach (var nota in notasMusicales)
+                                                    {
+                                                        var n = nota;
+                                                        <button type="button" class="btn-tonalidad-item" @onclick="() => CambiarTono(cancionActual, n, false)">@n</button>
+                                                        <button type="button" class="btn-tonalidad-item" @onclick="() => CambiarTono(cancionActual, n, true)">@(n)m</button>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div style="position: relative;">
+                                            <div class="d-flex align-items-center bg-dark bg-opacity-75 rounded-pill px-2 border border-secondary" style="height: 32px;">
+                                                <button class="btn p-0 px-2 text-white border-0" @onclick="() => { cancionActual.Bpm = Math.Max(30, cancionActual.Bpm - 1); cancionIdBurbujaAbierta = 0; }">-</button>
+                                                <input type="number"
+                                                       class="bpm-input-custom"
+                                                       @bind="cancionActual.Bpm"
+                                                       @bind:event="oninput"
+                                                       @onclick="() => AlternarBurbuja(cancionActual.Id, false)" />
+                                                <button class="btn p-0 px-2 text-white border-0" @onclick="() => { cancionActual.Bpm = Math.Min(300, cancionActual.Bpm + 1); cancionIdBurbujaAbierta = 0; }">+</button>
+                                            </div>
+                                            @if (cancionIdBurbujaAbierta == cancionActual.Id && tipoBurbuja == "BPM")
+                                            {
+                                                <div class="popover-bpm">
+                                                    @for (int i = 50; i <= 260; i += 5)
+                                                    {
+                                                        var bpmValue = i;
+                                                        <button type="button" class="btn-tonalidad-item" @onclick="() => CambiarBpm(cancionActual, bpmValue)">@bpmValue</button>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex flex-column align-items-end gap-1">
+                                        @if (cancionIdEditandoNota == cancionActual.Id)
+                                        {
+                                            <div class="input-group input-group-sm" style="max-width: 220px;">
+                                                <input type="text" class="form-control bg-dark text-white border-secondary rounded-start" @bind="notaTemp" />
+                                                <button class="btn btn-success rounded-end" @onclick="() => GuardarNota(cancionActual)">✔</button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn-action-liquid btn-action-secondary" title="Editar Anotación" @onclick="() => IniciarEditarNota(cancionActual)">Notas</button>
+                                        }
+                                    <div class="text-end mt-1">
+                                        <span class="badge bg-warning text-dark" style="font-size: 7.5pt;">@rolActual</span>
+                                        <p class="m-0 text-white-50 small fst-italic" style="font-size: 8pt; max-width: 260px;">
+                                            @(cancionActual.NotasPorRol.ContainsKey(rolActual) && !string.IsNullOrWhiteSpace(cancionActual.NotasPorRol[rolActual])
+                                                                                ? cancionActual.NotasPorRol[rolActual]
+                                                                                : "Sin anotaciones para este rol...")
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h3 class="m-0 fw-bold fs-4" style="color: var(--cyan-accent);">@cancionActual.Titulo</h3>
+                                @if (!string.IsNullOrEmpty(cancionActual.NombrePdf))
+                                            {
+                                                <span class="badge bg-danger bg-opacity-75 rounded-pill px-2 py-1" style="font-size: 7.5pt;">PDF</span>
+                                            }
+                                        </div>
+                                        <p class="m-0 text-white-50 small">@cancionActual.Autor</p>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn-action-liquid btn-action-warning" @onclick="() => IniciarEdicionCancion(cancionActual)">Editar</button>
+                                        <button class="btn-action-liquid btn-action-success" @onclick="() => AgregarAlSetlist(cancionActual)">+ Setlist</button>
+                                    </div>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(cancionActual.LetraConAcordes))
+                                {
+                                    <div class="chords-display mb-3">@cancionActual.LetraConAcordes</div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(cancionActual.PdfBase64))
+                                {
+                                    <div class="mt-3">
+                                        <iframe src="data:application/pdf;base64,@cancionActual.PdfBase64" class="pdf-viewer"></iframe>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else if (vistaActual == "setlists")
+        {
+            <div class="glass-panel p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold text-info m-0">Setlist de Ensayo</h4>
+                        <small class="text-white-50">Modo en vivo con acordes, notas y partituras.</small>
+                    </div>
+                    @if (setlistActual.Count > 0)
+                    {
+                        <button class="btn-action-liquid btn-action-danger" @onclick="() => setlistActual.Clear()">Vaciar Setlist</button>
+                    }
+                </div>
+
+                @if (setlistActual.Count == 0)
+                {
+                    <p class="text-white-50">No hay temas agregados al setlist aún. Ve a <strong>Canciones</strong> y presiona <strong>'+ Setlist'</strong> en los temas que ensayarán.</p>
+                }
+                else
+                {
+                    <div class="row g-4">
+                        @foreach (var cancion in setlistActual)
+                        {
+                            var item = cancion;
+                            <div class="col-12">
+                                <div class="glass-panel p-4 border-info border-opacity-50">
+                                    <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom border-secondary border-opacity-25">
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h3 class="m-0 fw-bold fs-4" style="color: var(--cyan-accent);">@item.Titulo</h3>
+                                                @if (!string.IsNullOrEmpty(item.NombrePdf))
+                                                {
+                                                    <span class="badge bg-danger bg-opacity-75 rounded-pill px-2 py-1" style="font-size: 7.5pt;">PDF</span>
+                                                }
+                                            </div>
+                                            <span class="text-white-50 small">@item.Autor &bull; Tono: <strong>@item.Tonalidad</strong> &bull; BPM: <strong>@item.Bpm</strong></span>
+                                        </div>
+                                        <button class="btn-action-liquid btn-action-danger" @onclick="() => setlistActual.Remove(item)">Quitar</button>
+                                    </div>
+
+                                    @if (item.NotasPorRol.ContainsKey(rolActual) && !string.IsNullOrWhiteSpace(item.NotasPorRol[rolActual]))
+                                    {
+                                        <div class="p-2 mb-3 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25 text-warning small">
+                                            <strong>Nota (@rolActual):</strong> @item.NotasPorRol[rolActual]
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(item.LetraConAcordes))
+                                    {
+                                        <div class="chords-display mb-3">@item.LetraConAcordes</div>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(item.PdfBase64))
+                                    {
+                                        <div class="mt-3">
+                                            <iframe src="data:application/pdf;base64,@item.PdfBase64" class="pdf-viewer"></iframe>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else if (vistaActual == "agregar")
+        {
+            <div class="glass-panel p-4" style="max-width: 650px; margin: 0 auto;">
+                <h4 class="fw-bold text-info mb-3">@(editandoCancion ? "Editar Canción" : "Agregar Nueva Canción")</h4>
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">Título</label>
+                    <input type="text" class="form-control bg-dark text-white border-secondary" @bind="cancionForm.Titulo" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">Autor / Artista</label>
+                    <input type="text" class="form-control bg-dark text-white border-secondary" @bind="cancionForm.Autor" />
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label small text-white-50">Tono Base</label>
+                        <select class="form-select bg-dark text-white border-secondary" @bind="cancionForm.Tonalidad">
+                            @foreach (var n in notasMusicales)
+                            {
+                                <option value="@n">@n</option>
+                                <option value="@(n)m">@(n)m</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small text-white-50">BPM</label>
+                        <input type="number" class="form-control bg-dark text-white border-secondary" @bind="cancionForm.Bpm" />
+                    </div>
+                </div>
+
+                <div class="mb-3 p-3 bg-dark bg-opacity-50 rounded border border-secondary">
+                    <label class="form-label fw-bold text-white small">Adjuntar Partitura o Letra en PDF</label>
+                    <InputFile OnChange="ManejarArchivoPdf" class="form-control bg-dark text-white border-secondary" accept=".pdf" />
+
+                    @if (procesandoPdf)
+                    {
+                        <div class="text-info small mt-2">Cargando PDF...</div>
+                    }
+                    else if (!string.IsNullOrEmpty(cancionForm.NombrePdf))
+                    {
+                        <div class="text-success small mt-2">Archivo adjunto: @cancionForm.NombrePdf</div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-white-50">Letra con Acordes</label>
+                    <textarea rows="8" class="form-control bg-dark text-white border-secondary font-monospace" placeholder="Pega acordes de texto aquí..." @bind="cancionForm.LetraConAcordes"></textarea>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn-action-liquid btn-action-info flex-grow-1 py-2 fs-6" @onclick="GuardarTemaFormulario" disabled="@procesandoPdf">Guardar Tema</button>
+                    @if (editandoCancion)
+                    {
+                        <button class="btn-action-liquid btn-action-secondary" @onclick='() => vistaActual = "canciones"'>Cancelar</button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- CONTENEDOR EXCLUSIVO DE IMPRESIÓN OSCURO TOTAL SIN ROL -->
+<div id="print-container">
+    @foreach (var c in ObtenerCancionesParaImprimir())
+    {
+        <div class="print-page-break mb-5">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid rgba(255,255,255,0.15); padding-bottom: 12px; margin-bottom: 24px;">
+                <img src="logo.svg" alt="DDMChords Logo" style="max-width: 140px; height: auto;" />
+                <div style="text-align: right;">
+                    <span style="font-size: 11pt; font-weight: 700; color: #38bdf8;">Tono: @c.Tonalidad &bull; BPM: @c.Bpm</span>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h1 style="margin: 0; font-size: 26pt; font-weight: 800; color: #ffffff;">@c.Titulo</h1>
+                <h4 style="margin: 4px 0 0 0; font-size: 14pt; font-weight: 500; color: #94a3b8;">@c.Autor</h4>
+            </div>
+
+            @if (c.NotasPorRol.ContainsKey(rolActual) && !string.IsNullOrWhiteSpace(c.NotasPorRol[rolActual]))
+            {
+                <div style="background-color: rgba(245, 158, 11, 0.15); border-left: 4px solid #f59e0b; padding: 10px 14px; margin-bottom: 20px; font-size: 10pt; color: #fcd34d;">
+                    <strong>Anotación:</strong> @c.NotasPorRol[rolActual]
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(c.LetraConAcordes))
+            {
+                <div style="font-family: 'Consolas', 'Courier New', monospace; font-size: 13pt; line-height: 1.9; white-space: pre-wrap; text-align: center; color: @printColorLetra;">
+                    @((MarkupString)FormatearAcordesImpresion(c.LetraConAcordes))
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool rolSeleccionadoInicial = false;
+    private bool mostrarModalEliminar = false;
+    private bool mostrarModalImpresion = false;
+    private string vistaActual = "canciones";
+    private string rolActual = "Guitarra Eléctrica";
+
+    // Colores por defecto para modo oscuro
+    private string printColorAcordes = "#38bdf8";
+    private string printColorLetra = "#f8fafc";
+
+    private int cancionIdBurbujaAbierta = 0;
+    private string tipoBurbuja = "";
+
+    private int cancionIdEditandoNota = 0;
+    private string notaTemp = string.Empty;
+    private bool editandoCancion = false;
+    private bool procesandoPdf = false;
+
+    private readonly List<string> listaRoles = new()
+    {
+        "Guitarra Eléctrica",
+        "Guitarra Acústica",
+        "Piano / Teclado",
+        "Bajo",
+        "Batería",
+        "Voz Principal",
+        "Voz 2",
+        "Voz 3",
+        "Voz 4",
+        "Invitado"
+    };
+
+    private readonly string[] notasMusicales = { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B" };
+    private readonly string[] escalaSostenidos = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+    private readonly string[] escalaBemoles = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
+
+    public class CancionItem
+    {
+        public int Id { get; set; }
+        public string Titulo { get; set; } = "";
+        public string Autor { get; set; } = "";
+        public string Tonalidad { get; set; } = "C";
+        public int Bpm { get; set; } = 120;
+        public string LetraConAcordes { get; set; } = "";
+        public string NombrePdf { get; set; } = "";
+        public string PdfBase64 { get; set; } = "";
+        public Dictionary<string, string> NotasPorRol { get; set; } = new();
+    }
+
+    private List<CancionItem> listaDeCanciones = new();
+    private List<CancionItem> setlistActual = new();
+    private CancionItem cancionForm = new();
+
+    private void ElegirRolInicial(string rol)
+    {
+        rolActual = rol;
+        rolSeleccionadoInicial = true;
+    }
+
+    private void CerrarSesionRol()
+    {
+        rolSeleccionadoInicial = false;
+    }
+
+    private void AbrirConfigImpresion()
+    {
+        mostrarModalImpresion = true;
+    }
+
+    private async Task EjecutarDescargaPdf()
+    {
+        mostrarModalImpresion = false;
+        await Task.Delay(100);
+        await JS.InvokeVoidAsync("window.print");
+    }
+
+    private IEnumerable<CancionItem> ObtenerCancionesParaImprimir()
+    {
+        if (vistaActual == "setlists" && setlistActual.Count > 0)
+        {
+            return setlistActual;
+        }
+        return listaDeCanciones;
+    }
+
+    private string FormatearAcordesImpresion(string texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto)) return string.Empty;
+
+        string patron = @"\b([A-G][#b]?)(m|maj|min|dim|aug|sus[24]?|[0-9]+)*(\/([A-G][#b]?))?\b";
+
+        return Regex.Replace(texto, patron, match =>
+        {
+            return $"<span style='color: {printColorAcordes}; font-weight: 700;'>{match.Value}</span>";
+        });
+    }
+
+    private void AlternarBurbuja(int id, bool esTono)
+    {
+        if (cancionIdBurbujaAbierta == id && ((esTono && tipoBurbuja == "Tono") || (!esTono && tipoBurbuja == "BPM")))
+        {
+            cancionIdBurbujaAbierta = 0;
+            tipoBurbuja = "";
+        }
+        else
+        {
+            cancionIdBurbujaAbierta = id;
+            tipoBurbuja = esTono ? "Tono" : "BPM";
+        }
+    }
+
+    private void CambiarBpm(CancionItem cancion, int nuevoBpm)
+    {
+        cancion.Bpm = nuevoBpm;
+        cancionIdBurbujaAbierta = 0;
+        tipoBurbuja = "";
+    }
+
+    private void CambiarTono(CancionItem cancion, string notaDestino, bool esMenor)
+    {
+        string nuevoTono = esMenor ? $"{notaDestino}m" : notaDestino;
+        string tonoAnterior = cancion.Tonalidad;
+
+        if (tonoAnterior != nuevoTono)
+        {
+            int semitonos = CalcularDistanciaSemitonos(tonoAnterior, nuevoTono);
+            cancion.LetraConAcordes = TransponerTextoCompleto(cancion.LetraConAcordes, semitonos, nuevoTono.Contains("b"));
+            cancion.Tonalidad = nuevoTono;
+        }
+
+        cancionIdBurbujaAbierta = 0;
+        tipoBurbuja = "";
+    }
+
+    private int ObtenerIndiceNota(string nota)
+    {
+        string raiz = Regex.Match(nota, @"^[A-G][#b]?").Value;
+        for (int i = 0; i < 12; i++)
+        {
+            if (escalaSostenidos[i].Equals(raiz, StringComparison.OrdinalIgnoreCase) ||
+                escalaBemoles[i].Equals(raiz, StringComparison.OrdinalIgnoreCase))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int CalcularDistanciaSemitonos(string tonoOrigen, string tonoDestino)
+    {
+        int idxOrigen = ObtenerIndiceNota(tonoOrigen);
+        int idxDestino = ObtenerIndiceNota(tonoDestino);
+
+        if (idxOrigen == -1 || idxDestino == -1) return 0;
+
+        int distancia = idxDestino - idxOrigen;
+        if (distancia < 0) distancia += 12;
+        return distancia;
+    }
+
+    private string TransponerTextoCompleto(string texto, int semitonos, bool usarBemol)
+    {
+        if (string.IsNullOrWhiteSpace(texto) || semitonos == 0) return texto;
+
+        string patron = @"\b([A-G][#b]?)(m|maj|min|dim|aug|sus[24]?|[0-9]+)*(\/([A-G][#b]?))?\b";
+
+        return Regex.Replace(texto, patron, match =>
+        {
+            string raiz = match.Groups[1].Value;
+            string extension = match.Groups[2].Value;
+            string bajo = match.Groups[4].Value;
+
+            string nuevaRaiz = TransponerNotaIndividual(raiz, semitonos, usarBemol);
+            string nuevoBajo = !string.IsNullOrEmpty(bajo) ? "/" + TransponerNotaIndividual(bajo, semitonos, usarBemol) : "";
+
+            return $"{nuevaRaiz}{extension}{nuevoBajo}";
+        });
+    }
+
+    private string TransponerNotaIndividual(string nota, int semitonos, bool usarBemol)
+    {
+        int idx = ObtenerIndiceNota(nota);
+        if (idx == -1) return nota;
+
+        int nuevoIdx = (idx + semitonos) % 12;
+        if (nuevoIdx < 0) nuevoIdx += 12;
+
+        return usarBemol ? escalaBemoles[nuevoIdx] : escalaSostenidos[nuevoIdx];
+    }
+
+    private void IniciarEditarNota(CancionItem c)
+    {
+        cancionIdEditandoNota = c.Id;
+        notaTemp = c.NotasPorRol.ContainsKey(rolActual) ? c.NotasPorRol[rolActual] : "";
+    }
+
+    private void GuardarNota(CancionItem c)
+    {
+        c.NotasPorRol[rolActual] = notaTemp;
+        cancionIdEditandoNota = 0;
+    }
+
+    private void AgregarAlSetlist(CancionItem cancion)
+    {
+        if (!setlistActual.Any(s => s.Id == cancion.Id))
+        {
+            setlistActual.Add(cancion);
+        }
+    }
+
+    private void EliminarCancion(CancionItem cancion)
+    {
+        listaDeCanciones.Remove(cancion);
+        setlistActual.RemoveAll(s => s.Id == cancion.Id);
+
+        if (listaDeCanciones.Count == 0)
+        {
+            mostrarModalEliminar = false;
+        }
+    }
+
+    private void IrANuevoTema()
+    {
+        cancionForm = new CancionItem { Tonalidad = "C", Bpm = 120 };
+        editandoCancion = false;
+        vistaActual = "agregar";
+    }
+
+    private void IniciarEdicionCancion(CancionItem cancion)
+    {
+        cancionForm = cancion;
+        editandoCancion = true;
+        vistaActual = "agregar";
+    }
+
+    private async Task ManejarArchivoPdf(InputFileChangeEventArgs e)
+    {
+        var archivo = e.File;
+        if (archivo != null && archivo.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            procesandoPdf = true;
+            StateHasChanged();
+
+            try
+            {
+                cancionForm.NombrePdf = archivo.Name;
+                using var stream = archivo.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+
+                cancionForm.PdfBase64 = Convert.ToBase64String(bytes);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error cargando PDF: {ex.Message}");
+            }
+            finally
+            {
+                procesandoPdf = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void GuardarTemaFormulario()
+    {
+        if (string.IsNullOrWhiteSpace(cancionForm.Titulo)) return;
+
+        if (!editandoCancion)
+        {
+            cancionForm.Id = listaDeCanciones.Any() ? listaDeCanciones.Max(c => c.Id) + 1 : 1;
+            listaDeCanciones.Add(cancionForm);
+        }
+
+        cancionForm = new();
+        editandoCancion = false;
+        vistaActual = "canciones";
+    }
+}
