@@ -1,0 +1,18 @@
+[
+  {
+    "Id": 1,
+    "Titulo": "Nombre de la Canción",
+    "Autor": "Nombre del Compositor",
+    "Tonalidad": "C",
+    "Bpm": 120,
+    "NotaMusico": "",
+    "LetraConAcordes": "C          G\nPrimera línea de la letra...",
+    "Notas": [
+      {
+        "Rol": "Guitarra Eléctrica",
+        "Texto": "Acá va la indicación específica para este instrumento.",
+        "ColorBorde": "#ffc107"
+      }
+    ]
+  }
+]

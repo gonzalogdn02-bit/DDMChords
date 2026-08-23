@@ -1,0 +1,85 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = false
+build_property.IncludeAllContentForSelfExtract = 
+build_property.TargetFramework = net9.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = DDMChords
+build_property.RootNamespace = DDMChords
+build_property.ProjectDir = C:\Users\gonza\OneDrive\Desktop\DDM Chords\DDMChords\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = false
+build_property.RazorLangVersion = 9.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\gonza\OneDrive\Desktop\DDM Chords\DDMChords
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 9.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/Components/CancionCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDYW5jaW9uQ2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/Components/Header.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xIZWFkZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/Components/ModalEditar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xNb2RhbEVkaXRhci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/Components/Sidebar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaWRlYmFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/DDMChords/App.razor]
+build_metadata.AdditionalFiles.TargetPath = RERNQ2hvcmRzXEFwcC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/DDMChords/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = RERNQ2hvcmRzXF9JbXBvcnRzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/Pages/CancioneroView.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2FuY2lvbmVyb1ZpZXcucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/Pages/Component.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/Pages/LoginView.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW5WaWV3LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/DDMChords/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = RERNQ2hvcmRzXExheW91dFxNYWluTGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-zhxrwq5vs0
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/DDMChords/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = RERNQ2hvcmRzXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-5zit832gpa
+
+[C:/Users/gonza/OneDrive/Desktop/DDM Chords/DDMChords/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-p9qlxu38ng
