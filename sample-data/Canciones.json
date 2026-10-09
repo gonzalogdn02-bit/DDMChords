@@ -1,0 +1,14 @@
+[
+  {
+    "Id": 1,
+    "Titulo": "Cancion Demo",
+    "Autor": "Autor",
+    "Artista": "Banda",
+    "Tonalidad": "G",
+    "Bpm": 120,
+    "TonoOriginal": "G",
+    "TonoActual": "G",
+    "LetraConAcordes": "G\nHola mundo",
+    "Notas": []
+  }
+]

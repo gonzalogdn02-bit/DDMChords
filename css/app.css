@@ -1,0 +1,44 @@
+:root {
+    --background: #090C10;
+    --surface: #11161D;
+    --surface-hover: #1C232D;
+    --border: #222B36;
+    --primary: #00E5FF;
+    --primary-glow: rgba(0, 229, 255, 0.3);
+    --purple: #8B5CF6;
+    --purple-glow: rgba(139, 92, 246, 0.5);
+    --text: #F8FAFC;
+    --text-muted: #94A3B8;
+    --chord: #38BDF8;
+    
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Fira Code', 'SF Mono', Consolas, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background-color: var(--background); color: var(--text); font-family: var(--font-sans); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: var(--primary); text-decoration: none; transition: color 150ms var(--ease-out); }
+a:hover { color: #88B1F8; }
+
+.btn {
+    background-color: transparent; border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 0.95rem; font-weight: 500;
+    transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+.btn:active { transform: scale(0.95); }
+.btn-primary { background-color: var(--primary); color: #000; border: none; font-weight: 600; }
+.btn-primary:hover { box-shadow: 0 0 15px var(--primary-glow); }
+
+input, select, textarea {
+    background-color: #1A202C; border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 10px 14px; font-family: var(--font-sans); transition: border-color 150ms ease;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+
+.card { background-color: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+
+#blazor-error-ui {
+    background: #991B1B; color: white; bottom: 0; left: 0; padding: 0.6rem 1.2rem; position: fixed; z-index: 1000; display: none;
+}
+#blazor-error-ui .dismiss { cursor: pointer; float: right; margin-left: 1rem; }
