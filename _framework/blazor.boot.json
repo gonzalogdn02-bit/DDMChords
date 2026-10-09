@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "DDMChords",
   "resources": {
-    "hash": "sha256-c6a8MdKFbgjTdg4FULxZNta3vZ3Tvp9Z/Yh9b/GUooQ=",
+    "hash": "sha256-UYjI6soyw5aiE6SEEoJLj8OADDDQ7bvyz5QSjKDBb4g=",
     "fingerprinting": {
       "Microsoft.AspNetCore.Components.7kfbkpdn6m.wasm": "Microsoft.AspNetCore.Components.wasm",
       "Microsoft.AspNetCore.Components.Web.m6bakpaqcj.wasm": "Microsoft.AspNetCore.Components.Web.wasm",
@@ -36,7 +36,7 @@
       "System.Text.Json.lvyxk0k3w3.wasm": "System.Text.Json.wasm",
       "System.Text.RegularExpressions.i40wimhdg0.wasm": "System.Text.RegularExpressions.wasm",
       "System.Private.CoreLib.wi065ydt5x.wasm": "System.Private.CoreLib.wasm",
-      "DDMChords.3l622j3z15.wasm": "DDMChords.wasm",
+      "DDMChords.9sdnrjyqc9.wasm": "DDMChords.wasm",
       "dotnet.js": "dotnet.js",
       "dotnet.native.6sals8nuk0.js": "dotnet.native.js",
       "dotnet.native.zzmgzj9wb3.wasm": "dotnet.native.wasm",
@@ -95,7 +95,7 @@
       "System.Text.Encodings.Web.61fgrvui92.wasm": "sha256-5hiRHg3FXimgfp/PNEFaSXCmGJS26W4LckFCrYKk2k0=",
       "System.Text.Json.lvyxk0k3w3.wasm": "sha256-Lz2Dy+niKDe1v5oPYxROXLGN8T7HbbAU7E6dDXBB514=",
       "System.Text.RegularExpressions.i40wimhdg0.wasm": "sha256-ooJHXZcpjUVvablFm9bj4qD9gcTkHPFzIipe3eCxaVY=",
-      "DDMChords.3l622j3z15.wasm": "sha256-KRRMagQE/cvyE1wvVnNOzY77/Lv2qei5ByekGfLezjs="
+      "DDMChords.9sdnrjyqc9.wasm": "sha256-d5OOgV9mlrv6IfCiXZOUSnEmY+gyB65BbiflippK49c="
     }
   },
   "cacheBootResources": true,
