@@ -44,3 +44,78 @@
 .nav-label[b-jc4c85b5q5] { margin-left: 10px; font-size: 0.9rem; font-weight: 600; }
 .nav-btn:hover[b-jc4c85b5q5] { color: var(--primary); }
 .nav-btn.active[b-jc4c85b5q5] { color: var(--primary); box-shadow: inset 3px 3px 6px rgba(0,0,0,0.6), inset -2px -2px 5px rgba(255,255,255,0.02); }
+
+
+/* ====== RESPONSIVE PARA MÓVILES ====== */
+@media (max-width: 768px) {
+    .app-layout[b-jc4c85b5q5] { 
+        flex-direction: column; /* Apila el menú arriba y el contenido abajo */
+    }
+    
+    .sidebar[b-jc4c85b5q5] { 
+        width: 100% !important; 
+        height: 70px; 
+        flex-direction: row; 
+        padding: 0 1rem; 
+        align-items: center; 
+        justify-content: space-between; 
+        transition: height 250ms var(--ease-out);
+        z-index: 100;
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .sidebar.expanded[b-jc4c85b5q5] { 
+        height: 100vh; 
+        flex-direction: column; 
+        justify-content: flex-start;
+        padding-top: 1.5rem;
+    }
+    
+    .brand-container[b-jc4c85b5q5] { 
+        margin-bottom: 0; 
+        width: auto; 
+        padding: 0;
+    }
+    
+    .sidebar.expanded .brand-container[b-jc4c85b5q5] {
+        margin-bottom: 2rem;
+    }
+
+    /* En modo colapsado, los íconos se ponen horizontales a la derecha */
+    .side-nav[b-jc4c85b5q5] { 
+        flex-direction: row; 
+        gap: 0.8rem; 
+        width: auto;
+        padding: 0;
+        justify-content: flex-end;
+    }
+    
+    /* En modo expandido, los botones ocupan toda la pantalla hacia abajo */
+    .sidebar.expanded .side-nav[b-jc4c85b5q5] {
+        flex-direction: column;
+        width: 100%;
+        padding: 0 2rem;
+        gap: 1.5rem;
+    }
+    
+    .sidebar:not(.expanded) .nav-btn[b-jc4c85b5q5] { 
+        margin: 0; 
+    }
+
+    .sidebar.expanded .nav-btn[b-jc4c85b5q5] {
+        width: 100%;
+        justify-content: flex-start;
+        padding-left: 2rem;
+    }
+    
+    /* Forzar que las etiquetas se vean al expandir el menú en el celular */
+    .sidebar.expanded .nav-label[b-jc4c85b5q5] {
+        display: inline !important;
+    }
+
+    /* El contenedor principal ya no necesita padding excesivo en celular */
+    .content[b-jc4c85b5q5] {
+        padding: 1rem;
+    }
+}
