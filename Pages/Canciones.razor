@@ -38,8 +38,7 @@ else {
     protected override async Task OnInitializedAsync() {
         canciones = await Storage.ObtenerRepertorioAsync();
     }
-    
-    private void IrACancion(int id) => Navigation.NavigateTo($"/cancion/{id}");
+    private void IrACancion(int id) => Navigation.NavigateTo($"cancion/{id}");
     
     private async Task BorrarCancion(int id) {
         var cancion = canciones?.FirstOrDefault(c => c.Id == id);

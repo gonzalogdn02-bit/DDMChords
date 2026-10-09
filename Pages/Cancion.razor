@@ -128,7 +128,7 @@
     protected override async Task OnInitializedAsync() {
         repertorio = await Storage.ObtenerRepertorioAsync();
         cancion = repertorio.FirstOrDefault(c => c.Id == Id);
-        if (cancion == null) Navigation.NavigateTo("/canciones");
+        if (cancion == null) Navigation.NavigateTo("canciones");
         if (cancion != null && cancion.Notas == null) cancion.Notas = new List<NotaBanda>();
     }
 
