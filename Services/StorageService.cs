@@ -10,10 +10,9 @@ namespace DDMChords.Services
 {
     public class StorageService
     {
-        private readonly IJSRuntime _jsRuntime;
         private readonly HttpClient _http;
-        private const string RepertorioKey = "repertorio_ddmchords";
-        private const string SetlistsKey = "setlists_ddmchords";
+        private readonly IJSRuntime _jsRuntime; // Lo dejamos para no romper inyección de dependencias
+        private const string FirebaseUrl = "https://ddmchords-default-rtdb.firebaseio.com/";
 
         public StorageService(IJSRuntime jsRuntime, HttpClient http)
         {
@@ -23,37 +22,32 @@ namespace DDMChords.Services
 
         public async Task GuardarRepertorioAsync(List<CancionModel> canciones)
         {
-            var json = JsonSerializer.Serialize(canciones);
-            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", RepertorioKey, json);
+            await _http.PutAsJsonAsync($"{FirebaseUrl}repertorio.json", canciones);
         }
 
         public async Task<List<CancionModel>> ObtenerRepertorioAsync()
         {
-            var json = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", RepertorioKey);
-            
-            if (!string.IsNullOrEmpty(json))
+            try 
             {
-                var localData = JsonSerializer.Deserialize<List<CancionModel>>(json);
-                if (localData != null && localData.Count > 0) return localData;
-            }
-            return new List<CancionModel>();
+                var data = await _http.GetFromJsonAsync<List<CancionModel>>($"{FirebaseUrl}repertorio.json");
+                return data ?? new List<CancionModel>();
+            } 
+            catch { return new List<CancionModel>(); }
         }
 
         public async Task GuardarSetlistsAsync(List<SetlistModel> setlists)
         {
-            var json = JsonSerializer.Serialize(setlists);
-            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", SetlistsKey, json);
+            await _http.PutAsJsonAsync($"{FirebaseUrl}setlists.json", setlists);
         }
 
         public async Task<List<SetlistModel>> ObtenerSetlistsAsync()
         {
-            var json = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", SetlistsKey);
-            if (!string.IsNullOrEmpty(json))
+            try 
             {
-                var localData = JsonSerializer.Deserialize<List<SetlistModel>>(json);
-                if (localData != null) return localData;
-            }
-            return new List<SetlistModel>();
+                var data = await _http.GetFromJsonAsync<List<SetlistModel>>($"{FirebaseUrl}setlists.json");
+                return data ?? new List<SetlistModel>();
+            } 
+            catch { return new List<SetlistModel>(); }
         }
     }
 }
