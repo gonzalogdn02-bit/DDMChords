@@ -1,0 +1,41 @@
+@using System.Text.RegularExpressions
+
+<div class="chord-viewer-container">
+    @if (!string.IsNullOrEmpty(LetraOriginal))
+    {
+        var lineas = LetraOriginal.Split('\n');
+        foreach (var linea in lineas)
+        {
+            if (EsLineaDeAcordes(linea))
+            {
+                <div class="chord-line">@RenderizarAcordes(linea)</div>
+            }
+            else
+            {
+                <div class="lyric-line">@linea</div>
+            }
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string LetraOriginal { get; set; } = string.Empty;
+
+    private bool EsLineaDeAcordes(string linea)
+    {
+        if (string.IsNullOrWhiteSpace(linea)) return false;
+        var words = linea.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+        int chordCount = 0;
+        var regex = new Regex(@"^[A-G][b#]?(m|maj7|7|sus4|dim)?$");
+        foreach (var word in words) { if (regex.IsMatch(word)) chordCount++; }
+        return chordCount > 0 && ((double)chordCount / words.Length) > 0.6;
+    }
+
+    private string RenderizarAcordes(string linea) => linea;
+}
+
+<style>
+    .chord-viewer-container { background-color: transparent; overflow-x: auto; }
+    .chord-line { color: var(--chord); font-family: var(--font-mono); font-size: 1rem; white-space: pre; margin-top: 1.5rem; margin-bottom: 0.2rem; }
+    .lyric-line { color: var(--text); font-family: var(--font-mono); font-size: 1rem; white-space: pre-wrap; }
+</style>

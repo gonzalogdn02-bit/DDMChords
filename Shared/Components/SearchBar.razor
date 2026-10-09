@@ -1,0 +1,14 @@
+<div class="search-container">
+    <input type="search" class="search-input" placeholder="Buscar por título o artista..." value="@SearchTerm" @oninput="HandleInput" />
+</div>
+@code {
+    [Parameter] public string SearchTerm { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SearchTermChanged { get; set; }
+    private async Task HandleInput(ChangeEventArgs e) => await SearchTermChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+}
+<style>
+    .search-container { margin-bottom: 2rem; }
+    .search-input { width: 100%; padding: 12px 16px; background-color: #1A202C; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-sans); font-size: 1rem; transition: border-color 150ms var(--ease-out); }
+    .search-input:focus { outline: none; border-color: var(--primary); }
+    .search-input::placeholder { color: var(--text-muted); }
+</style>

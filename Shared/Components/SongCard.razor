@@ -1,0 +1,37 @@
+@using DDMChords.Models
+<div class="song-card neumorphism-card" @onclick="OnClick">
+    <div class="header">
+        <h3>@Cancion.Titulo</h3>
+        <span class="key-badge">@Cancion.Tonalidad</span>
+    </div>
+    <div class="meta">
+        <span class="artist">@Cancion.Artista</span>
+        <span class="bpm">@Cancion.Bpm BPM</span>
+    </div>
+    <div class="actions" @onclick:stopPropagation>
+        <button class="btn-delete" @onclick="BorrarCancion" title="Borrar">🗑️</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public CancionModel Cancion { get; set; } = default!;
+    [Parameter] public EventCallback<int> OnSongSelected { get; set; }
+    [Parameter] public EventCallback<int> OnSongDeleted { get; set; }
+
+    private async Task OnClick() => await OnSongSelected.InvokeAsync(Cancion.Id);
+    private async Task BorrarCancion() => await OnSongDeleted.InvokeAsync(Cancion.Id);
+}
+<style>
+    .neumorphism-card { background-color: var(--surface); border: none; box-shadow: 4px 4px 10px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.03); }
+    .song-card { border-radius: 12px; padding: 1.2rem; cursor: pointer; transition: transform 160ms var(--ease-out); position: relative; }
+    .song-card:active { transform: scale(0.97); }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-right: 2rem; }
+    .header h3 { font-size: 1.1rem; font-weight: 600; color: var(--text); margin: 0; }
+    .key-badge { background-color: rgba(0, 229, 255, 0.1); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; }
+    .meta { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.9rem; padding-right: 2rem; }
+    
+    .actions { position: absolute; top: 1.2rem; right: 1rem; }
+    .btn-delete { background: transparent; border: none; color: #EF4444; cursor: pointer; font-size: 1rem; padding: 4px; opacity: 0.5; transition: opacity 150ms ease; }
+    .song-card:hover .btn-delete { opacity: 1; }
+    .btn-delete:hover { transform: scale(1.1); }
+</style>

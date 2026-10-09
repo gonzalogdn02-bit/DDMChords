@@ -1,0 +1,301 @@
+@page "/cancion/{Id:int}"
+@using DDMChords.Models
+@using DDMChords.Services
+@using DDMChords.Shared.Components
+@inject StorageService Storage
+@inject TransposerService Transposer
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@if (cancion != null) {
+    <PageTitle>@cancion.Titulo - DDMChords</PageTitle>
+
+    <div class="card song-card-main neumorphism">
+        <div class="top-controls">
+            <div class="left-controls">
+                <div class="tone-selector-container">
+                    <button class="pill tone-pill" @onclick="ToggleToneMenu">🎵 Tono: @cancion.TonoActual</button>
+                    
+                    @if (showToneMenu)
+                    {
+                        <div class="tone-menu">
+                            @foreach (var note in new[] { "C","Cm","C#","C#m","Db","Dbm","D","Dm","D#","D#m","Eb","Ebm","E","Em","F","Fm","F#","F#m","Gb","Gbm","G","Gm","G#","G#m","Ab","Abm","A","Am","A#","A#m","Bb","Bbm","B","Bm" })
+                            {
+                                <button class="tone-btn" @onclick="() => SeleccionarTono(note)">@note</button>
+                            }
+                        </div>
+                    }
+                </div>
+                
+                <div class="pill bpm-control">
+                    <button @onclick="() => cancion.Bpm--">-</button>
+                    <input type="number" @bind="cancion.Bpm" @bind:event="oninput" class="bpm-input" />
+                    <button @onclick="() => cancion.Bpm++">+</button>
+                </div>
+            </div>
+            <div class="right-controls">
+                @if (isAddingNote)
+                {
+                    <div class="note-input-container">
+                        <input type="text" class="input-neumorphism note-input" @bind="nuevaNotaTexto" placeholder="Escribir nota..." />
+                        <button class="btn-circle-small check-btn" @onclick="GuardarNota">✓</button>
+                        <button class="btn-circle-small cancel-btn" @onclick="() => isAddingNote = false">✕</button>
+                    </div>
+                }
+                else
+                {
+                    <button class="btn-circle-small" title="Agregar nota" @onclick="() => isAddingNote = true">+</button>
+                }
+            </div>
+        </div>
+
+        <div class="song-header">
+            <div class="title-area">
+                <h1 class="title">@cancion.Titulo</h1>
+                <h2 class="artist">@cancion.Artista</h2>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline-warning" @onclick="ToggleEdit">
+                    @(isEditing ? "💾 Guardar Letra" : "✏️ Editar Letra")
+                </button>
+                <button class="btn btn-outline-success" @onclick="AgregarASetlist">+ Setlist</button>
+                <button class="btn btn-outline-info" onclick="window.print()">🖨️ Imprimir</button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(cancion.NombrePdf))
+        {
+            <div class="attachments">
+                <button class="btn-attachment pdf-red">📎 @cancion.NombrePdf</button>
+            </div>
+        }
+
+        <div class="song-content-layout">
+            <div class="chord-col">
+                @if (isEditing)
+                {
+                    <textarea class="input-neumorphism edit-textarea" @bind="cancion.LetraConAcordes" @bind:event="oninput" rows="15"></textarea>
+                }
+                else
+                {
+                    <ChordViewer LetraOriginal="@(Transposer.TransponerAcordes(cancion.LetraConAcordes, cancion.TonoOriginal, cancion.TonoActual))" />
+                }
+            </div>
+            
+            <div class="notes-col">
+                @if (cancion.Notas != null && cancion.Notas.Any())
+                {
+                    @foreach (var nota in cancion.Notas)
+                    {
+                        <div class="band-note-card">
+                            <div class="band-note-text">@nota.Texto</div>
+                            <button class="btn-delete-note" @onclick="() => BorrarNota(nota)">✕</button>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (showToast)
+    {
+        <div class="toast-notification">@toastMessage</div>
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private CancionModel? cancion;
+    private bool showToneMenu = false;
+    private bool isEditing = false;
+    private bool isAddingNote = false;
+    private string nuevaNotaTexto = string.Empty;
+    private List<CancionModel> repertorio = new();
+
+    private bool showToast = false;
+    private string toastMessage = "";
+
+    private async Task MostrarToast(string mensaje)
+    {
+        toastMessage = mensaje;
+        showToast = true;
+        StateHasChanged();
+        await Task.Delay(3000);
+        showToast = false;
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync() {
+        repertorio = await Storage.ObtenerRepertorioAsync();
+        cancion = repertorio.FirstOrDefault(c => c.Id == Id);
+        if (cancion == null) Navigation.NavigateTo("/canciones");
+        if (cancion != null && cancion.Notas == null) cancion.Notas = new List<NotaBanda>();
+    }
+
+    private void ToggleToneMenu() => showToneMenu = !showToneMenu;
+    
+    private void SeleccionarTono(string tono)
+    {
+        if (cancion != null) cancion.TonoActual = tono;
+        showToneMenu = false;
+    }
+
+    private async Task ToggleEdit()
+    {
+        isEditing = !isEditing;
+        if (!isEditing)
+        {
+            await Storage.GuardarRepertorioAsync(repertorio);
+            await MostrarToast("Letra guardada correctamente.");
+        }
+    }
+
+    private async Task GuardarNota()
+    {
+        if (!string.IsNullOrWhiteSpace(nuevaNotaTexto) && cancion != null)
+        {
+            cancion.Notas.Add(new NotaBanda 
+            { 
+                Texto = nuevaNotaTexto,
+                ColorBorde = "#FACC15"
+            });
+            await Storage.GuardarRepertorioAsync(repertorio);
+            nuevaNotaTexto = string.Empty;
+        }
+        isAddingNote = false;
+    }
+    
+    private async Task BorrarNota(NotaBanda nota)
+    {
+        if (cancion != null)
+        {
+            cancion.Notas.Remove(nota);
+            await Storage.GuardarRepertorioAsync(repertorio);
+        }
+    }
+
+    private async Task AgregarASetlist()
+    {
+        var setlists = await Storage.ObtenerSetlistsAsync();
+        if (!setlists.Any())
+        {
+            setlists.Add(new SetlistModel { Id = 1, Nombre = "Nuevo Setlist", Fecha = DateTime.Now.AddDays(1) });
+        }
+        
+        var ultimoSetlist = setlists.Last();
+        if (cancion != null && !ultimoSetlist.CancionesIds.Contains(cancion.Id))
+        {
+            ultimoSetlist.CancionesIds.Add(cancion.Id);
+            await Storage.GuardarSetlistsAsync(setlists);
+            await MostrarToast($"Agregada a '{ultimoSetlist.Nombre}'");
+        }
+        else if (cancion != null)
+        {
+            await MostrarToast("La canción ya estaba en el Setlist.");
+        }
+    }
+}
+
+<style>
+    .toast-notification { position: fixed; bottom: 2rem; right: 2rem; background-color: var(--primary); color: #000; padding: 12px 24px; border-radius: 8px; font-weight: bold; box-shadow: 0 10px 25px rgba(0,229,255,0.3); z-index: 1000; animation: slideUp 300ms ease, fadeOut 300ms ease 2.7s; }
+    @@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+    .neumorphism { box-shadow: inset 2px 2px 5px rgba(255,255,255,0.05), inset -3px -3px 7px rgba(0,0,0,0.5), 5px 5px 15px rgba(0,0,0,0.4); }
+    .song-card-main { border-radius: 12px; padding: 2rem; background-color: var(--surface); border: none; }
+    .top-controls { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .left-controls, .right-controls { display: flex; align-items: center; gap: 0.8rem; }
+    .tone-selector-container { position: relative; }
+    .tone-menu { position: absolute; top: 110%; left: 0; background-color: #11161D; border: 1px solid var(--border); border-radius: 12px; padding: 1rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 380px; }
+    .tone-btn { background-color: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 0; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background-color 150ms ease; }
+    .tone-btn:hover { background-color: var(--border); }
+    .pill { background-color: #0D1117; border: none; border-radius: 20px; padding: 6px 14px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--text-muted); cursor: pointer; box-shadow: 2px 2px 5px rgba(0,0,0,0.4), -1px -1px 3px rgba(255,255,255,0.05); }
+    .tone-pill { color: #818CF8; }
+    .bpm-control { padding: 4px 10px; }
+    .bpm-control button { background: none; border: none; color: var(--text); cursor: pointer; padding: 0 4px; font-weight: bold; }
+    .bpm-input { background: transparent; border: none; color: var(--text); font-weight: 700; width: 40px; text-align: center; font-size: 0.9rem; padding: 0; }
+    .bpm-input:focus { outline: none; }
+    .bpm-input::-webkit-outer-spin-button, .bpm-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    
+    .role-badge { background-color: #FACC15; color: #000; border-radius: 12px; padding: 2px 10px; font-size: 0.75rem; font-weight: 700; }
+    
+    .note-input-container { display: flex; align-items: center; gap: 0.5rem; animation: slideIn 200ms ease; }
+    @@keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .note-input { width: 200px; padding: 4px 10px; font-size: 0.85rem; }
+    .input-neumorphism { background-color: #0D1117; border: none; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.6), inset -1px -1px 3px rgba(255,255,255,0.05); color: var(--text); border-radius: 8px; font-family: var(--font-sans); }
+    .input-neumorphism:focus { outline: none; box-shadow: inset 2px 2px 5px rgba(0,229,255,0.2); }
+    
+    .btn-circle-small { width: 24px; height: 24px; border-radius: 50%; border: none; background: #0D1117; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.4), -1px -1px 3px rgba(255,255,255,0.05); transition: transform 150ms ease; font-weight: bold; }
+    .btn-circle-small:active { transform: scale(0.9); box-shadow: inset 2px 2px 4px rgba(0,0,0,0.5); }
+    .check-btn { color: #10B981; }
+    .cancel-btn { color: #EF4444; }
+    
+    .song-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+    .title { color: var(--primary); font-size: 2.2rem; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: -0.5px; }
+    .artist { color: var(--text-muted); font-size: 1rem; font-weight: 400; margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 1px; }
+    .header-actions { display: flex; gap: 0.8rem; }
+    .btn-outline-warning { border: 1px solid #F59E0B; color: #F59E0B; background: transparent; cursor: pointer; border-radius: 8px; padding: 8px 12px; transition: all 150ms; }
+    .btn-outline-warning:hover { background: rgba(245,158,11,0.1); }
+    .btn-outline-success { border: 1px solid #10B981; color: #10B981; background: transparent; cursor: pointer; border-radius: 8px; padding: 8px 12px; transition: all 150ms; }
+    .btn-outline-success:hover { background: rgba(16,185,129,0.1); }
+    .btn-outline-info { border: 1px solid #06B6D4; color: #06B6D4; background: transparent; cursor: pointer; border-radius: 8px; padding: 8px 12px; transition: all 150ms; font-weight: bold; }
+    .btn-outline-info:hover { background: rgba(6,182,212,0.1); }
+    
+    .song-content-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem; }
+    
+    .band-note-card { background-color: #0D1117; border-left: 4px solid #FACC15; padding: 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem; position: relative; box-shadow: 3px 3px 6px rgba(0,0,0,0.4); }
+    .band-note-text { font-size: 0.95rem; color: var(--text); }
+    .btn-delete-note { position: absolute; top: 0.5rem; right: 0.5rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
+    .btn-delete-note:hover { color: #EF4444; }
+    
+    .edit-textarea { width: 100%; font-family: var(--font-mono); resize: vertical; padding: 12px 14px; }
+    .attachments { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    .btn-attachment { border: none; border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: white; display: inline-flex; align-items: center; gap: 6px; }
+    .pdf-red { background-color: #991B1B; }
+    
+    @@media (max-width: 768px) {
+        .song-content-layout { grid-template-columns: 1fr; }
+    }
+
+    @@media print {
+        body, html, .app-layout, .main-wrapper, .content {
+            background-color: #0f172a !important; 
+            color: #e2e8f0 !important; 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important; 
+            height: auto !important; 
+            overflow: visible !important;
+            margin: 0 !important; 
+            padding: 0 !important;
+        }
+        .sidebar, .topbar, .top-controls, .header-actions, .attachments, .btn-delete-note, .toast-notification {
+            display: none !important;
+        }
+        .song-card-main {
+            box-shadow: none !important;
+            background-color: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .song-content-layout {
+            display: grid !important;
+            grid-template-columns: 2fr 1fr !important;
+            gap: 1rem !important;
+        }
+        .notes-col {
+            margin-top: 0 !important;
+            page-break-inside: avoid;
+        }
+        .song-header {
+            margin-bottom: 1rem !important;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 1rem;
+        }
+        .title { color: #fff !important; }
+        .band-note-card {
+            border-left: 4px solid #FACC15 !important;
+            background-color: #1e293b !important;
+            color: #fff !important;
+        }
+    }
+</style>

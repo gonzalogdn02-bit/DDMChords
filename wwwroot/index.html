@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DDMChords</title>
+    
+    <!-- Política de Seguridad Web Estricta (CSP) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' data: ws: wss:">
+    
+    <!-- Para dotnet watch local, base href="/" (el pipeline lo cambia a /DDMChords/ en GitHub Pages) -->
+    <base href="/" />
+    
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="DDMChords.styles.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="app">
+        <div style="display:flex; justify-content:center; align-items:center; height:100vh; color:#94A3B8;">
+            Cargando DDMChords...
+        </div>
+    </div>
+    <div id="blazor-error-ui">
+        Ha ocurrido un error.
+        <a href="" class="reload">Recargar</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+</html>

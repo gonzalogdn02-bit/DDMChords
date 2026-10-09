@@ -1,5 +1,88 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<main>
-    @Body
-</main>
+<div class="app-layout">
+    <aside class="sidebar neumorphism-sidebar @(isExpanded ? "expanded" : "")">
+        <div class="brand-container" style="display: flex; justify-content: center; padding: 1rem 0;">
+            <button class="btn-toggle-menu" @onclick="ToggleSidebar" style="background: transparent; border: none; cursor: pointer; padding: 0; outline: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="@LogoViewBox" style="height: 40px; width: auto; transition: all 0.3s ease;" role="img" aria-labelledby="title desc">
+                  <title id="title">DDM Chords</title>
+                  <desc id="desc">Logo minimalista con símbolo de diapasón azul y blanco, y texto DDM Chords.</desc>
+                  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- Arco abierto que rodea el diapasón -->
+                    <path d="M 246 748 A 178 178 0 1 1 463 474" stroke="#0865F5" stroke-width="14"/>
+                    <path d="M 439 752 A 178 178 0 0 0 488 700" stroke="#0865F5" stroke-width="14"/>
+                    <!-- Cejilla -->
+                    <path d="M 263 520 H 420" stroke="#F8F8F8" stroke-width="17"/>
+                    <!-- Cuerdas -->
+                    <path d="M 274 538 V 760 M 319 538 V 760 M 364 538 V 760 M 408 538 V 760" stroke="#F5F5F5" stroke-width="5"/>
+                    <!-- Trastes -->
+                    <path d="M 274 604 H 408 M 274 676 H 408" stroke="#F5F5F5" stroke-width="5"/>
+                  </g>
+                  <!-- Puntos de digitación -->
+                  <g fill="#0865F5">
+                    <circle cx="408" cy="568" r="15"/>
+                    <circle cx="319" cy="639" r="15"/>
+                    <circle cx="364" cy="710" r="15"/>
+                  </g>
+                  <!-- Logotipo tipográfico -->
+                  <g font-family="Montserrat, Arial, Helvetica, sans-serif" font-weight="400" style="display: @DisplayMode;">
+                    <text x="557" y="648" font-size="190" letter-spacing="-5" fill="#F8F8F8">DD</text>
+                    <path d="M 901 512 L 923 512 L 980 590 L 1036 512 L 1058 512 L 1058 648 L 1038 648 L 1038 548 L 980 624 L 922 548 L 922 648 L 901 648 Z" fill="#0865F5"/>
+                    <path d="M 570 705 H 631" stroke="#0865F5" stroke-width="5"/>
+                    <path d="M 997 705 H 1058" stroke="#0865F5" stroke-width="5"/>
+                    <text x="658" y="722" font-size="43" letter-spacing="14" fill="#F8F8F8">CHORDS</text>
+                  </g>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="side-nav">
+            <NavLink class="nav-btn" href="canciones">
+                <span class="nav-icon" style="display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                </span>
+                <span class="nav-label" style="display: @InlineDisplayMode;">Repertorio</span>
+            </NavLink>
+            <NavLink class="nav-btn" href="setlists">
+                <span class="nav-icon" style="display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path>
+                    </svg>
+                </span>
+                <span class="nav-label" style="display: @InlineDisplayMode;">Setlists</span>
+            </NavLink>
+            <NavLink class="nav-btn" href="nuevo">
+                <span class="nav-icon" style="display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </span>
+                <span class="nav-label" style="display: @InlineDisplayMode;">Nueva Canción</span>
+            </NavLink>
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <main class="content">
+            @Body
+        </main>
+    </div>
+</div>
+
+@code {
+    private bool isExpanded = false;
+
+    private string LogoViewBox => isExpanded ? "60 290 1000 480" : "210 290 320 480";
+    private string DisplayMode => isExpanded ? "block" : "none";
+    private string InlineDisplayMode => isExpanded ? "inline" : "none";
+
+    private void ToggleSidebar()
+    {
+        isExpanded = !isExpanded;
+    }
+}

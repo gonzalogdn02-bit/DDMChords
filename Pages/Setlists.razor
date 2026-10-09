@@ -1,0 +1,123 @@
+@page "/setlists"
+@using DDMChords.Models
+@using DDMChords.Services
+@using DDMChords.Shared.Components
+@inject StorageService Storage
+@inject NavigationManager Navigation
+
+<PageTitle>Setlists - DDMChords</PageTitle>
+
+<div class="header-with-action">
+    <h2>Setlists de Ensayo</h2>
+    <button class="btn btn-primary btn-neumorphism" @onclick="CrearSetlist">+ Nuevo Setlist</button>
+</div>
+
+@if (setlists == null)
+{
+    <div class="loading-state">Cargando setlists...</div>
+}
+else if (!setlists.Any())
+{
+    <div class="card empty-container neumorphism-inset">
+        <p class="subtitle">Próximos servicios y ensayos programados.</p>
+        <div style="margin-top: 2rem;">
+            <p style="font-size: 0.9rem; color: #64748B;">No hay setlists creados. Haz clic en "+ Nuevo Setlist" para comenzar.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="setlists-grid">
+        @foreach (var setlist in setlists)
+        {
+            <div class="setlist-card neumorphism-card">
+                <div class="setlist-header">
+                    <h3>@setlist.Nombre</h3>
+                    <span class="setlist-date">@setlist.Fecha.ToString("dd MMM yyyy")</span>
+                    <button class="btn-delete" @onclick="() => BorrarSetlist(setlist.Id)" title="Borrar Setlist">🗑️</button>
+                </div>
+                
+                <div class="setlist-songs">
+                    @if (setlist.CancionesIds.Any())
+                    {
+                        @foreach (var cancionId in setlist.CancionesIds)
+                        {
+                            var cancion = repertorio.FirstOrDefault(c => c.Id == cancionId);
+                            if (cancion != null)
+                            {
+                                <div class="setlist-song-item" @onclick="() => IrACancion(cancion.Id)">
+                                    <span class="song-title">@cancion.Titulo</span>
+                                    <span class="song-key">@cancion.TonoActual</span>
+                                </div>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <p class="empty-songs">Setlist vacío. Agrega canciones desde el Repertorio.</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<SetlistModel>? setlists;
+    private List<CancionModel> repertorio = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        repertorio = await Storage.ObtenerRepertorioAsync();
+        setlists = await Storage.ObtenerSetlistsAsync();
+    }
+
+    private async Task CrearSetlist()
+    {
+        var nuevo = new SetlistModel
+        {
+            Id = setlists?.Any() == true ? setlists.Max(s => s.Id) + 1 : 1,
+            Nombre = $"Ensayo del Domingo {DateTime.Now:dd/MM}",
+            Fecha = DateTime.Now.AddDays(7 - (int)DateTime.Now.DayOfWeek) // Próximo domingo
+        };
+        setlists?.Add(nuevo);
+        await Storage.GuardarSetlistsAsync(setlists ?? new());
+    }
+
+    private async Task BorrarSetlist(int id)
+    {
+        var setlist = setlists?.FirstOrDefault(s => s.Id == id);
+        if (setlist != null)
+        {
+            setlists?.Remove(setlist);
+            await Storage.GuardarSetlistsAsync(setlists ?? new());
+        }
+    }
+
+    private void IrACancion(int id) => Navigation.NavigateTo($"/cancion/{id}");
+}
+
+<style>
+    .header-with-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; margin-top: 1rem; }
+    .header-with-action h2 { color: var(--text); font-size: 2rem; margin: 0; }
+    .btn-neumorphism { box-shadow: 2px 2px 5px rgba(0,0,0,0.5), -1px -1px 3px rgba(255,255,255,0.1); }
+    .btn-neumorphism:active { box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5); transform: scale(0.97); }
+    .empty-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; border-radius: 12px; }
+    .neumorphism-inset { background-color: var(--surface); border: none; box-shadow: inset 2px 2px 6px rgba(0,0,0,0.6), inset -2px -2px 6px rgba(255,255,255,0.03); }
+    .subtitle { color: var(--primary); font-size: 1.2rem; font-weight: 600; }
+    
+    .setlists-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; }
+    .neumorphism-card { background-color: var(--surface); border: none; box-shadow: 5px 5px 15px rgba(0,0,0,0.5), -3px -3px 10px rgba(255,255,255,0.03); border-radius: 16px; padding: 1.5rem; }
+    .setlist-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; position: relative; }
+    .setlist-header h3 { color: var(--primary); font-size: 1.3rem; font-weight: 700; margin: 0; }
+    .setlist-date { color: var(--text-muted); font-size: 0.85rem; }
+    .btn-delete { background: transparent; border: none; color: #EF4444; cursor: pointer; font-size: 1rem; opacity: 0.5; transition: opacity 150ms; margin-left: 10px; }
+    .btn-delete:hover { opacity: 1; transform: scale(1.1); }
+    
+    .setlist-songs { display: flex; flex-direction: column; gap: 0.8rem; }
+    .empty-songs { color: var(--text-muted); font-size: 0.9rem; font-style: italic; text-align: center; margin-top: 1rem; }
+    .setlist-song-item { display: flex; justify-content: space-between; align-items: center; background-color: #0D1117; padding: 10px 14px; border-radius: 8px; cursor: pointer; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.5); transition: all 150ms; }
+    .setlist-song-item:hover { color: var(--primary); box-shadow: inset 2px 2px 4px rgba(0,229,255,0.1); }
+    .song-title { font-weight: 600; }
+    .song-key { background-color: rgba(0, 229, 255, 0.1); color: var(--primary); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+</style>
